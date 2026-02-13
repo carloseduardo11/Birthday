@@ -1,0 +1,446 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>Genius</title>
+	<style>
+		.content { margin: 30px 90px; 	padding: 40px;	border: 1px solid #AAE;	background-color: #ffffb3	}
+	
+		.boxes { padding: 60px; }
+		
+		.box { height: 80px;		width: 80px;		float: left;		border-width: 3px;	border-style: solid;		}
+		
+		#b_blue { 	border-color: #00A;	background-color: #33D;	}
+		#b_green { 	border-color: #0A0;	background-color: #3D3;	}
+		#b_yellow { 	border-color: #AA0;	background-color: #DD3;	}		
+		#b_red {	border-color: #A00;	background-color: #D33;	}
+		
+		.clear { clear: both;	}
+	
+		#counter {	//margin-top: 10px;	font-weight: bold;	}
+		
+		#countNumber{	border: 1px solid black;	padding: 1px 7px;	font-weight:normal; background-color: white;}
+		
+		svg{	border: 1px solid gray;	background-color: white;	}
+		
+		#inputElemNumb{  width: 100px; }
+		
+		
+		#control{
+			//border: 1px dashed gray;
+			padding: 5px;
+			margin-bottom: 20px;
+		}
+		
+	</style>
+
+	
+</head>
+<body>
+
+<div class=content>
+	<div id="control">
+		<button id="botaoIniciar" onclick="iniciar()" disabled>Iniciar</button>
+		<button onclick="montarBolo()">Montar Bolo</button>
+		
+		<div id=levelControl>
+			Número de Elementos:
+			<input type="range" id="inputElemNumb" min="3" max="7" onchange="document.getElementById('levelDisplay').innerHTML=this.value" value="3">
+			<span id="levelDisplay" style="padding: 1px 7px; font-size:14px;" >3</span>
+		</div>
+		<div id=counter>Level:
+			<span id=countNumber>-</span>
+		</div>
+	</div>
+	
+	<svg id="areaJogo" width="920" height="350"></svg>
+	
+	<div class=boxes style="display:none">
+		<div class=box id=b_blue></div>
+		<div class=box id=b_green></div>
+		<div class=box id=b_yellow></div>
+		<div class=box id=b_red></div>
+		<div class=clear></div>
+	</div>
+</div>
+
+	
+	<script language="javascript">
+	
+		//bordaCores = [ "#00A", "#0A0", "#AA0", "#A00" ];
+		//cores= ["#33D", "#3D3", "#DD3", "#D33" ];
+		cores= ["#ffe5e9"];	//ajuste
+		
+	function iniciar(){		
+	
+	
+		//Inicializo as variaveis
+		
+		
+		numBoxes = document.getElementById("inputElemNumb").value;	 //Numero de elementos pra piscar / emitir som
+		numTurns = 10;		//Número máximo da sequencia
+		clickNumber = 0;	//Número da sequencia que o jogador tem que acertar
+		turn = 0;		//Numero do turno (que aumenta a sequencia a cada acerto)
+				
+				
+		keySequence = [];	//Index (gerado aleatoriamente) dos elementos a serem iluminados 
+		keyLightElements	= []; 	//Elementos a serem passados para serem iluminados, de acordo com sequencia do vetor anterior
+		
+		playerSequence = [];	//Index dos elementos que o jogador clicou.
+		
+		//setDivColors()
+		setOnClick();		
+		
+		gerarSequencia();
+		
+		
+		highlightTimer =0;
+		startHighlightTurn();
+		
+		temUmaChance=true;
+		//Este método irá chamar a funcao que roda o jogo
+		//play();
+	}
+	
+	
+	
+	function montarBolo(){
+		var areaJogo = document.getElementById("areaJogo");
+		
+		//TO DO: retira todos os nós anteriores do SVG
+		while (areaJogo.lastChild) {
+			areaJogo.removeChild(areaJogo.lastChild);
+		}
+		
+		numBoxes = document.getElementById("inputElemNumb").value;
+		
+		alturaSvg=350;
+		larguraSvg=920;
+		
+		alturaBolo=220;
+		
+		larguraVela=14;
+		alturaVela=70;
+		larguraElem = 120;
+		
+		
+		//BOLO
+		larguraBolo=numBoxes*larguraElem;
+		
+		posXBolo= (larguraSvg - larguraBolo)/2;		//centralizado
+		posYBolo= (alturaSvg-alturaBolo)-10;
+		
+		var b = criarBolo( posXBolo, posYBolo, larguraBolo, alturaBolo);
+		areaJogo.appendChild(b);
+		
+		
+		
+		
+		for(var i=0; i<numBoxes; i++){
+			//COBERTURA
+			posXElem = posXBolo+larguraElem*i;
+			posYElem = posYBolo;
+			var c = criarCoberturaUnidade( posXElem, posYElem, larguraElem );
+			areaJogo.appendChild(c);	
+			
+			//VELA
+			posXVela = posXElem+(larguraElem-larguraVela)/2;
+			posYVela = posYElem - alturaVela;
+			var v = criarVela(posXVela, posYVela, larguraVela, alturaVela);
+			areaJogo.appendChild(v);	
+		}
+		
+		
+		
+		document.getElementById("botaoIniciar").disabled = false;
+		document.getElementById("countNumber").innerHTML= "-";
+		
+		
+	}
+	
+	function criarBolo(x, y, w, h){
+		
+		var grupo = document.createElementNS("http://www.w3.org/2000/svg","g");
+		
+		var bolo = document.createElementNS("http://www.w3.org/2000/svg","rect");
+		bolo.setAttribute("x", 0);
+		bolo.setAttribute("y", 0);
+		bolo.setAttribute("width", w);
+		bolo.setAttribute("height", h);
+		bolo.setAttribute("stroke", "#ff8095");
+		bolo.setAttribute("fill", "#fff2e9");
+		bolo.setAttribute("stroke-width", "2");
+		
+		var boloSombra = document.createElementNS("http://www.w3.org/2000/svg","path");
+		
+		// M x,y inicial	Q x,y de curvatura	 x,y final	L  x,y (linha pra fechar a forma)
+		boloSombra.setAttribute("d", "M 0 "+(h-1)+" Q "+(w-10)+" "+h+", "+(w-1)+" "+(h*0.4-1)+" L "+(w-1)+" "+(h-1)+" Z");
+		boloSombra.setAttribute("fill", "#ffe1cc");
+		boloSombra.setAttribute("stroke", "#ffb3c0");
+		boloSombra.setAttribute("stroke-width", "1");
+		
+		grupo.appendChild(bolo);
+		grupo.appendChild(boloSombra);
+		
+		grupo.setAttribute("transform", "translate("+x+","+y+")");
+		return grupo;
+	}
+	
+	//http://stackoverflow.com/questions/16488884/add-svg-element-to-existing-svg-using-dom
+	function criarCoberturaUnidade( x, y, w){	//
+
+		//var areaJogo = document.getElementById("areaJogo");
+		//alert(areaJogo);
+		
+		
+		var grupo = document.createElementNS("http://www.w3.org/2000/svg","g");
+		
+		var camadaBaixo = document.createElementNS("http://www.w3.org/2000/svg","path");
+
+		camadaBaixo.setAttribute("d", "M 0 0 Q "+w/2+"  "+w*1.4+", "+w+" 0");
+		camadaBaixo.setAttribute("fill", "pink");
+		camadaBaixo.setAttribute("stroke", "#ffb3c0");
+		camadaBaixo.setAttribute("stroke-width", "2");
+		
+		
+		
+		var camadaCima = document.createElementNS("http://www.w3.org/2000/svg","path");
+		camadaCima.setAttribute("d", "M 0 0 Q "+w/2+"  "+w*1.1+", "+w+" 0");
+		camadaCima.setAttribute("fill", "#ffdbe0");
+		//camadaCima.setAttribute("fill", "#ffccd3");
+		camadaCima.setAttribute("stroke", "none");
+		camadaCima.setAttribute("stroke-width", "1");
+		camadaCima.setAttribute("class", "geniusElement");
+				
+		
+		grupo.appendChild(camadaBaixo);
+		grupo.appendChild(camadaCima);
+		//grupo.setAttribute("class", "geniusElement");
+		grupo.setAttribute("transform", "translate("+x+","+(y+1)+")");
+		
+		//areaJogo.appendChild(grupo);
+		return grupo;				
+	}
+
+	function criarVela(x, y, w, h){
+		var grupo = document.createElementNS("http://www.w3.org/2000/svg","g");
+		
+		var vela = document.createElementNS("http://www.w3.org/2000/svg","rect");
+		vela.setAttribute("x", 0);
+		vela.setAttribute("y", 0);
+		vela.setAttribute("width", w);
+		vela.setAttribute("height", h);
+		vela.setAttribute("stroke", "RoyalBlue");
+		vela.setAttribute("fill", "#a7b9f1");
+		vela.setAttribute("stroke-width", "1");
+		
+		
+		var velaSombra = document.createElementNS("http://www.w3.org/2000/svg","path");
+		
+		// M x,y inicial	Q x,y de curvatura	 x,y final	L  x,y (linha pra fechar a forma)
+		velaSombra.setAttribute("d", "M 0 "+(h-1)+" Q "+(w-10)+" "+h+", "+(w-1)+" "+(h*0.6-1)+" L "+(w-1)+" "+(h-1)+" Z");
+		velaSombra.setAttribute("fill", "#7b96ea");
+		velaSombra.setAttribute("stroke", "RoyalBlue");
+		velaSombra.setAttribute("stroke-width", "1");
+		
+		
+		var pavio = document.createElementNS("http://www.w3.org/2000/svg","path");
+		
+		pavio.setAttribute("d", "M "+(w/2) +", 0 L "+(w/2)+", -4");	
+		pavio.setAttribute("stroke", "black");
+		pavio.setAttribute("stroke-width", "1");
+		
+		
+		var fogoEsq = document.createElementNS("http://www.w3.org/2000/svg","path");
+		//<path d="M 10 20  C 0 15,  10 10,  10 0" fill="#ffd200" />
+		fogoEsq.setAttribute("d", "M "+(w/2)+" -4 C "+(w-w*1.5)+" -8,"+(w/2)+" -13,"+(w/2)+" -18 ");
+		fogoEsq.setAttribute("fill", "#ffd200");		
+		
+		
+		
+		var fogoDir = document.createElementNS("http://www.w3.org/2000/svg","path");
+		//<path d="M 10 20 C 20  15, 10 10, 10 0" fill="#ffd200" stroke="none" stroke-width="1"/>
+		fogoDir.setAttribute("d", "M "+(w/2)+" -4 C "+(w*1.5)+" -8,"+(w/2)+" -13,"+(w/2)+" -18 ");
+		fogoDir.setAttribute("fill", "#ffd200");      
+
+
+		grupo.appendChild(vela);
+		grupo.appendChild(velaSombra);
+		grupo.appendChild(fogoEsq);
+		grupo.appendChild(fogoDir);
+		grupo.appendChild(pavio);
+		
+		grupo.setAttribute("transform", "translate("+x+","+(y-1)+")");
+		return grupo;
+	}
+	
+	//Este método existe unicamente porque não é possível acessar facilmente o style definido na tag style.
+	function setDivColors(){
+		for(var i=0; i<numBoxes; i++){			
+			var elem = document.getElementsByClassName( "geniusElement" )[ i ];
+			//elem.style.backgroundColor = cores[i];
+			//elem.style.borderColor = bordaCores[i];
+			
+			elem.style.backgroundColor = cores[0];	//ajuste
+		}
+		console.log("Cores adicionadas");
+	}	
+	
+	
+	
+	//Adiciona o onClick nos objetos.
+	function setOnClick(){
+		var boxes = document.getElementsByClassName("geniusElement");
+		for( var i=0; i<numBoxes; i++){
+			boxes[i].onclick = registerClick;
+			boxes[i].value = i+1;	// +1 porque o index é 0, mas começa contagem pelo 1
+		}
+		console.log("Onclick adicionado");
+	}
+	
+	
+	
+	//Gera aleatoriamente a sequencia dos objetos que irão tocar / se iluminar
+	function gerarSequencia(){
+		for(var i=0; i<numTurns; i++){
+			keySequence.push( aleatorio(1, numBoxes) );
+		}
+		console.log("Light sequence: "+keySequence);
+	}
+	
+	
+
+	
+	
+	function startHighlightTurn(){
+		turn++;
+		turnStep = 0;	//Incrementa até igualar turn
+		
+		keyLightElements = [];
+		
+		for( var i=0; i< turn; i++){
+			keyLightElements.push ( document.getElementsByClassName("geniusElement")[  keySequence[i]-1  ]  );   //Notar o keySequence[i]-1. Pois os numeros foram gerados começando de 1.
+		}
+		console.log("keyLightElements: "+keyLightElements);
+		highlightTimer = setInterval(highlightTurn, 800);
+	}
+	
+	
+	
+	function highlightTurn(){		
+		
+		
+		
+		if( turn > numTurns){	//JOGADOR EXCEDEU OS LEVELS (GANHOU O JOGO)
+			console.log("Jogo acabou: turns="+turn+" numTurns="+numTurns);
+			clearInterval( highlightTimer );
+			alert("Parabéns!");
+		}
+		
+		else{	//JOGO EM ANDAMENTO
+			console.log("highlightTurn - iniciando turno: "+turn);
+			document.getElementById("countNumber").innerHTML = turn;
+			
+			
+			if( turnStep < turn ){ //DENTRO DO TURNO DE ILUMINAÇÃO
+				var elem = keyLightElements[turnStep]  ;	//A cada passo, pega o próximo elemento pro vetor de iluminação
+				highlightElement( elem, 500 );		//
+				turnStep++;
+			}		
+			else{			//TERMINOU DE ILUMINAR E VAI ESPERAR O JOGADOR
+				clearInterval( highlightTimer );			
+			}
+			
+			
+		}
+		
+	}
+	
+	//Pega um elemento ou grupo de elementos e os faz piscarem pelo tempo do timer
+	function highlightElement( elem, timer ){		
+
+		
+		
+		var corNormal = elem.attributes.fill.nodeValue;	//ajuste
+		//alert(corNormal);
+		//alert(elem.attributes.fill.nodeValue);
+		//elem.attributes.fill.nodeValue = "#ffe9f6";
+		elem.attributes.fill.nodeValue = "#feecf6";
+		//alert(elem.attributes.fill.nodeValue);
+		//elem.style.backgroundColor = "white";
+		
+		
+		
+		
+		setTimeout( clearHighlight, timer, elem, corNormal ); //função, timer, e 2 parâmetros
+		console.log("Fora do timeout");
+	}
+	
+	function clearHighlight( elem, corNormal ){	//ultimos dois parametros passados no setTimeout
+	
+		console.log("Dentro do timeout em cima");
+		
+		elem.attributes.fill.nodeValue = corNormal
+		//elem.style = oldStyle;
+		//elem.style.backgroundColor = "orange";
+		console.log("Dentro do timeout embaixo");
+	}
+	
+	
+	function registerClick(){	//TURNO DO JOGADOR
+		console.log("--clickNumber: "+clickNumber+"  --  no elemento de posicao "+ this.value);
+		highlightElement( this, 200);
+		//Verifica se o jogador acertou o elemento
+		if( keySequence[ clickNumber ] == this.value ){	//ACERTOU
+			clickNumber++;	//Próximo elemento
+			//alert("Acertou");
+			
+			
+			//Verifica se já chegou ao fim do turno
+			if( clickNumber == turn ){
+				//alert("Fim do turno");
+				clickNumber = 0;
+				
+				startHighlightTurn();
+			}
+		}
+		else{	//ERROU
+			if(temUmaChance){
+				alert("Errou, não é este.\nDesta vez passa...\nTente outro.");			
+				temUmaChance=false;
+			}
+			else{
+				alert("Incorreto.");	
+				//TODO reiniciar o jogo? , remover Onclicks 				
+			}
+		}
+	}	
+	
+	
+	/*
+	function createInterval(f,dynamicParameter,interval) { setInterval(function() { f(dynamicParameter); }, interval); } 
+	createInterval(funca,dynamicValue,500);
+	*/
+	
+	
+	
+	
+	
+	
+	
+	function aleatorio(inferior,superior){ 	// 1 e 4
+		numPossibilidades = (superior - inferior)+1 ;
+		
+		aleat = Math.random() * numPossibilidades ;
+		aleat = Math.floor(aleat) ;
+		return parseInt(inferior) + aleat ;
+	
+	} 
+	
+	
+	</script>
+	
+
+
+
+</body>
+</html>

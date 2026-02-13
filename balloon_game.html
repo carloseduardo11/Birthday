@@ -1,0 +1,210 @@
+﻿<html>
+<head>
+	<title>Balloon game</title>
+	<style>
+		/* Level 1 */
+		.content {
+			margin: 0 auto;
+			padding: 8px;
+			border: 1px solid black;
+			height: auto;
+			width: 1020px;
+		}
+		
+		
+		/* Level 2 */
+		.section {
+			float: left;
+			//border: dotted 1px blue;
+			height: 590px;
+			width: 504px;
+			margin: 2px;
+		}
+		
+		
+		#result {
+			text-align: center;
+			//margin: 0 auto;
+			padding-top: 70px;
+			font-size: 32px;
+			font-family: "Goudy Old Style", Garamond, "Big Caslon", "Times New Roman", serif;
+		}
+		
+		.label {
+			float: left;
+		}
+		#count {
+			margin-right: 40px;
+			float: left;
+			background-color: #CFDCEA;
+			border: solid 1px blue;
+			margin-left: 3px;
+			text-align: center;
+			height: 20px;
+			width: 30px;
+		}
+		#timer {
+			float: left;
+			border: solid 1px black;
+			margin-left: 3px;
+			text-align: center;
+			height: 20px;
+			width: 30px;
+		}
+		
+		#limite {
+			border: dashed 1px red;
+			margin: 3px;
+			height: 500px;
+			width: 500px;
+		}
+		.info {
+			float: left;
+			font-size:18px;
+		}
+		
+		
+		.clear {
+			clear: both;
+		}
+	
+		
+	</style>
+	
+	<script language="javascript">
+	/*Parametros*/
+	age = 5;	
+	ctdown = 15;
+	/*Parametros*/
+	
+	function start(){
+		//alert("BALLOON GAME: Pop the red balloon "+age+" times within "+ctdown+" seconds to win the game.");
+		var ano = prompt("Ano de Nascimento:");
+		ano = isNaN(ano)? 2000: +ano;
+		
+		age =  new Date().getUTCFullYear()-ano;
+		ctdown = Math.floor(age*1.05);
+		//ctdown = age+5;
+		
+		alert("BALLOON GAME: Estoure o balão vermelho "+age+" vezes em "+ctdown+" segundos para ganhar o jogo.");
+		start_game();
+	}
+	function start_game(){
+		contar=0;
+		document.getElementById("count").innerHTML=" "+contar;
+		countdown = ctdown;
+		document.getElementById("b1").style.position="static";
+		document.getElementById("timer").style.backgroundColor ="transparent";
+		//alert("Get ready!");
+		alert("Prepare-se!");
+	}
+	
+	function aleatorio(inferior,superior){ 
+		numPossibilidades = superior - inferior ;
+		aleat = Math.random() * numPossibilidades ;
+		aleat = Math.floor(aleat) ;
+		return parseInt(inferior) + aleat ;
+	} 
+	 
+
+	function ativar(){
+		contar++;
+		document.getElementById("count").innerHTML=" "+contar;
+		
+		var pos_hor = aleatorio(1, 435) + "px";
+		var pos_ver = aleatorio(1, 435) + "px";
+
+		//alert ("X: "+pos_hor+" e "+"Y: "+pos_ver);
+		document.getElementById("b1").style.position="relative";
+		document.getElementById("b1").style.top=pos_ver;
+		document.getElementById("b1").style.left=pos_hor;
+	}
+
+	var myVar=setInterval (function(){myTimer()},1000);
+/*
+	function inserir_no( parent, link ){	
+		var novo_elem = document.createElement("img");	
+		novo_elem.setAttribute("src", link);	
+		parent.appendChild( novo_elem );
+	}
+*/	
+	function myTimer(){
+		countdown--;
+		document.getElementById("timer").innerHTML=""+countdown;
+		if(countdown<5){
+			document.getElementById("timer").style.backgroundColor ="#FACDCA";
+		}
+		if(contar==age){
+			document.getElementById("count").style.backgroundColor ="#22FF22";
+			document.getElementById("count").style.borderColor = "#145514";
+		}
+		if( countdown==0 ){
+			if(contar<age){				
+				//alert("You didnt succeed. Please, try again.");
+				alert("Não foi desta vez. Por favor, tente novamente.");
+				start_game();
+			}
+			else{
+				//alert(". .. :* :* --- Congratulations... ! --- :* :* .. .");
+				//alert("Congratulations... !");
+				alert("Parabéns... !");
+				clearInterval(myVar);
+				document.getElementById("timer").style.backgroundColor ="transparent";
+				document.getElementById("count").style.backgroundColor ="#22FF22";
+				document.getElementById("count").style.borderColor = "#145514";
+			
+				document.getElementById("result").innerHTML = ". .. :* --- Felicidades! --- *: .. .<br> <br><br>";
+				
+				var novo_elem = document.createElement("img");
+				//novo_elem.setAttribute("src", "https://scontent-gru1-1.xx.fbcdn.net/hphotos-prn2/v/t1.0-9/10614243_1727753584117331_1530683855949462564_n.jpg?oh=01ede2062cd11d3110171dd46f268a1d&oe=5696AC90");	
+				//novo_elem.setAttribute("src", "https://scontent-ord1-1.xx.fbcdn.net/hphotos-prn2/v/t1.0-9/10614243_1727753584117331_1530683855949462564_n.jpg?oh=160cf6af944ebbbfdd1a1bbb10f5ccd9&oe=575C6D90");	
+				
+
+				//var imgSrc = (Math.round(Math.random()*10)%2==0)?"burns_monroe.jpg":"extraterrestres.jpg";
+				var imgSrc = "extraterrestres.jpg";
+				novo_elem.setAttribute("src", imgSrc);				
+				novo_elem.setAttribute("width", 509);	
+				
+				var parent = document.getElementById("result");
+				parent.appendChild( novo_elem );
+				
+			}
+			
+		}
+	}
+	</script>
+	
+
+	
+</head>
+<body onload="start()">
+<div class="content">
+	
+	<div class="section">
+		<h2 id="message">The Balloon Game</h2>
+		<div>
+			<div class="info">
+				<div class="label">Balões:</div>
+				<div id="count">-</div>
+			</div>
+			
+			<div class="info">
+				<div class="label">Tempo:</div>
+				<div id="timer">-</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<!--
+		<div id="limite"><img  id="b1" src="http://img.subeta.net/items/item_balloon_red.gif"  onclick="ativar()" alt="Click me"></div>
+		-->
+		<div id="limite"><img  id="b1" src="item_balloon_red.gif"  onclick="ativar()" alt="Click me"></div>
+		
+	</div>
+	
+	<div class="section">
+		<div id="result"></div>
+	</div>
+	<div class="clear"></div>
+</div>
+</body>
+</html>
